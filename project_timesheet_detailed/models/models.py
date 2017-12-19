@@ -58,7 +58,6 @@ class AccountAnalyticLine(models.Model):
         if self.task_id:
             self.write({
                 'project_id': self.task_id.project_id.id,
-                'issue_id': None,
                         })
 
     @api.onchange('issue_id')
@@ -66,7 +65,6 @@ class AccountAnalyticLine(models.Model):
         if self.issue_id:
             self.write({
                 'issue_id': self.issue_id.project_id.id,
-                'task_id': None,
             })
 
     @api.multi
