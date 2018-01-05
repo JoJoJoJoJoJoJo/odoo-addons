@@ -19,7 +19,7 @@ class AccountAnalyticLine(models.Model):
 
     )
     estimated_time = fields.Float('Estimated time', compute='_compute_estimated_time')
-    approved_time = fields.Float('Approved time', compute = '_compute_approved_time')
+    approved_time = fields.Float('Approved time', compute='_compute_approved_time')
 
     @api.multi
     @api.depends('task_id')
@@ -56,16 +56,12 @@ class AccountAnalyticLine(models.Model):
     @api.onchange('task_id')
     def task_id_on_change(self):
         if self.task_id:
-            self.write({
-                'project_id': self.task_id.project_id.id,
-                        })
+            self.write({'project_id': self.task_id.project_id.id})
 
     @api.onchange('issue_id')
     def issue_id_on_change(self):
         if self.issue_id:
-            self.write({
-                'issue_id': self.issue_id.project_id.id,
-            })
+            self.write({'issue_id': self.issue_id.project_id.id})
 
     @api.multi
     def write(self, vals):
@@ -76,6 +72,19 @@ class AccountAnalyticLine(models.Model):
     @api.multi
     def unlink(self):
         for rec in self:
-            if rec.stage != 'draft':
-                raise UserError('Only records in draft stage can be deleted!')
+            if rec.stage != 'to review':
+                raise UserError('Only records in to review can be deleted!')
         return super(AccountAnalyticLine, self).unlink(self)
+
+    @api.multi
+    def _check_task_and_issue(self):
+        for rec in self:
+            if rec.task_id and rec.issue_id:
+                return False
+        return True
+
+    _constraints = [
+        _check_task_and_issue,
+        'It is not allowed to have task and issue at the same time.',
+        ['task_id', 'issue_id'],
+    ]
